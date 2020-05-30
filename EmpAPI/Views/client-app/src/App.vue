@@ -25,4 +25,15 @@ export default {
   width: 100%;
   padding: 0px 100px;
 }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #01B075;
+  border-radius: 3px;
+}
+::-webkit-input-placeholder { /* Edge */
+  color: #C1C1C1;
+  font-style: italic;
+}
 </style>

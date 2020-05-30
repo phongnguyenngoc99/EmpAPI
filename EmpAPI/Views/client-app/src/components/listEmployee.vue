@@ -33,7 +33,7 @@
             <td>{{item.address}}</td>
             <td>
               <button type="button" class="btn btn-warning" v-on:click="isShowingEdit(item)">Sửa</button>
-              <button type="button" class="btn btn-danger" v-on:click="isShowingDelete(item.employeeId)">Xóa</button>
+              <button type="button" class="btn btn-danger" v-on:click="isShowingDelete(item)">Xóa</button>
             </td>
           </tr>
         </tbody>
@@ -42,7 +42,7 @@
          <modalAdd @getEmp="addEmployee"></modalAdd>
       </div>
       <div>
-        <modalDelete></modalDelete>
+        <modalDelete @getIdEmpDelete="deleteEmployee" :employee="employee"></modalDelete>
       </div>
       <div>
         <modalEdit @getEmpEdited="editEmployee" :employee="employee"></modalEdit>
@@ -50,6 +50,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import axios from 'axios';
 import modalAdd from './modalAdd'
@@ -65,50 +66,82 @@ export default {
   data () {
     return {
       interval: '',
-      // empCode : '',
-      // empName : '',
-      // empAge : '',
-      // empGender : '',
-      // empPhone : '',
-      // empAddress : '',
       listEmployees:[],
       employee: {},
       errors: []
     }
   },
   methods:{
+    /* 
+      Hàm mở modal thêm nhân viên
+      Created by : Phong
+      Created date: 29/5/2020
+    */
     isShowingAdd(){
         $('#addEmp').modal('toggle');
     },
-    isShowingDelete(id){
+    /* 
+      Hàm mở modal xóa nhân viên
+      Created by : Phong
+      Created date: 29/5/2020
+    */
+    isShowingDelete(employee){
+        this.employee = JSON.parse(JSON.stringify(employee));
         $('#deleteEmp').modal('toggle');
     },
-
+    /* 
+      Hàm mở modal edit nhân viên
+      Created by : Phong
+      Created date: 29/5/2020
+    */
     isShowingEdit(employee){
         this.employee = JSON.parse(JSON.stringify(employee));
         $('#editEmp').modal('toggle');
     },
-    /* 
-      Hàm thêm fresher
-      Created by : Phong
-      Created date: 22/5/2020
-    */
-    addEmployee(emp){
-      axios.post('https://localhost:44344/api/Employees/', emp)
-    },
 
-    editEmployee(emp){
-      axios.put('https://localhost:44344/api/Employees/' + emp.employeeId, emp)
+    /* 
+      Hàm thêm nhân viên
+      Created by : Phong
+      Created date: 29/5/2020
+    */
+    async addEmployee(emp){
+      var result = await axios.post('https://localhost:44344/api/Employees/', emp);
+      if(result.status=201){
+        this.listEmployees.splice(0,0,result.data);
+      }
     },
     /* 
-      Hàm xóa fresher
+      Hàm sửa nhân viên
       Created by : Phong
-      Created date: 22/5/2020
+      Created date: 29/5/2020
     */
-    deleteEmployee(id){
-      axios.delete('https://localhost:44344/api/Employees/' + id)
+    async editEmployee(emp){
+      var res = await axios.put('https://localhost:44344/api/Employees/' + emp.employeeId, emp);
+      var pos = this.listEmployees.findIndex(item => item.employeeId == emp.employeeId)
+      if(res.status=204){
+        this.listEmployees.splice(pos, 1, emp)
+      }
+    },
+    /* 
+      Hàm xóa nhân viên
+      Created by : Phong
+      Created date: 29/5/2020
+    */
+    async deleteEmployee(employee){
+      var id = employee.employeeId
+      var res = await axios.delete('https://localhost:44344/api/Employees/' + id)
+      var pos = this.listEmployees.findIndex(item => item.employeeId == employee.employeeId)
+      if(res.status=200){
+        this.listEmployees.splice(pos, 1)
+      }
     }
   },
+
+  /* 
+    hook created: load dữ liệu nhân viên từ database
+    Created by : Phong
+    Created date: 28/5/2020
+  */
   async created(){
     var res = await axios.get(`https://localhost:44344/api/Employees`);
     this.listEmployees = res.data;
@@ -128,12 +161,14 @@ export default {
   beforeUpdate(){
   },
   async updated(){
-    // var res = await axios.get(`https://localhost:44344/api/Employees`);
-    // this.listEmployees = res.data;
+    //var res = await axios.get(`https://localhost:44344/api/Employees`);
+    //this.listEmployees = res.data;
   },
   watch:{
     //khi có sự thay đổi dữ liệu trên component
-    listEmployees(newVal, oldVal){}
+    listEmployees(newVal, oldVal){
+    //this.listEmployees = newVal
+    }
   },
   beforeDestroy(){
   },
@@ -153,12 +188,11 @@ a {
   width: 100%;
   height: 40px;
   background-color: #F0F1FC;
-  display: flex;
   margin-bottom: 5px;
 }
 .toolbar button{
-  position: absolute;
-  right: 100px;
+  float: right;
+  padding-bottom: 5px;
   margin: 5px 10px 0px 0px;
   background-color: #01A971;
   border: none;
